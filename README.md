@@ -33,7 +33,12 @@ echo "& rustatus" >> .xinitrc
 ```
 
 ## TODO
-This program is not finished. I plan to potentially add 
+This program is usable to my liking but I want to make it better for other users as well. Currently I am working on
+* displaying ip addr, location, and weather (all optional of course, just like all other modules)
+
+
+I plan to potentially add 
 * a configuation file system to allow for easier modularity.
 * support for different battery configs.
 * volume percent support for systems without pulseaudio (just using axmixer master instead of amixer pulse)
+
