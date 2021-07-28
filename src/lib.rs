@@ -29,12 +29,15 @@ pub fn awk_volume() -> String {
     awk_output.retain(|c| !c.is_whitespace() && (c != '\n'));
     let split = awk_output.split("%");
     let vec: Vec<&str> = split.collect();
+
     if vec.len() >= 2 {
         if vec[0] == vec[1] {
             return String::from(format!(" Vol: {}% | ", vec[0]))
         }
         else {
-            return String::from("Unbalanced")
+            // linux updates one side faster when updating both, 
+            //unbalance is always corrected after a second passes
+            return String::from(" Vol: U% | ")
         }
     }
     else {
@@ -85,6 +88,29 @@ pub fn mouse_bat() -> String {
     };
     return String::from(format!("MB: {} | ", output))
 }
+pub fn internal_bat() -> String {
+    let contents = fs::read_to_string("/sys/class/power_supply/BAT0/capacity");
+    let output = match contents {
+        Ok(file) => file,
+        Err(_) => String::from(""),
+    }
+    .replace(|c: char| !c.is_ascii_alphanumeric(), "");
+
+    let charging_status = fs::read_to_string("/sys/class/power_supply/BAT0/status");
+    let indicator = 
+    match charging_status {
+            Ok(file) => 
+                match file.replace(|c: char| !c.is_ascii_alphanumeric(), "").as_str() {
+                        "Discharging" => "-" ,
+                        _ => "+",
+                    },
+            Err(_) => "?"
+        };
+    return String::from(format!("B: {}%{} | ",output, indicator))
+}
+
+
+
 
 // not so much tests as instead quick ways to display output
 // TODO turn into proper tests. 
