@@ -1,23 +1,30 @@
-use std::process::Command;
 mod lib;
 use lib::*;
+use std::process::Command;
 use std::thread;
-use std::io::Write;
-use std::io::stdout;
 
 fn main() {
-    print!("starting");
-    loop {
-        let volume = awk_volume();
-        let wifi = wifi_name();
-        let time = time();
-        let mb = mouse_bat();
-        let bat = internal_bat();
+    // all your desired modules, in order
+    let modules: Vec<&dyn Fn() -> String> = 
+        vec![
+            &awk_volume,
+            &wifi_name, 
+            &mouse_bat,
+            &internal_bat,
+            &time,
+        ];
 
-        let output = volume + &wifi + &mb + &bat + &time;
+
+    loop {
+        // base string
+        let mut output = String::from("");
+        // concatenate all output strings
+        for func in &modules {
+            output += &func();
+        }
+
         print!("\n{}", output);
-        // stdout().flush().unwrap();
-        // // bat, mouse bat, usb conn, ip, brightness
+
         Command::new("xsetroot")
         .arg("-name")
         .arg(output.to_string())

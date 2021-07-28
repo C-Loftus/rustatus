@@ -4,14 +4,15 @@ use std::fs;
 use ipgeolocate::{Locator, Service};
 
 /********************* */
-// Options aren't used in these functions. Instead error handling is
+// Options aren't returned by these functions. Instead error handling is
 // just done within the function itself, i.e. by returning a blank string
 // or a string that is formatted but just has no number
 
 // It is easier to handle each case in the functions since each one is
-// different. Updating the String to a long error is rarely desirable,
-// since it will cause the hostname to become much longer and thus 
+// different in its format. Updating the String to a long error is rarely 
+// desirable,since it will cause the hostname to become much longer and thus 
 // make the status bar unpleasing to the eye.
+
 /********************* */
 
 pub fn awk_volume() -> String {
@@ -174,7 +175,7 @@ mod tests {
     }
     #[test]
     fn location_test() {
-        let locale = location(&get_ip()).await;
+        let locale = location(&get_ip());
         print!("\n{}\n", locale);
     }
 }
