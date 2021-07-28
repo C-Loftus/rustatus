@@ -16,6 +16,7 @@ Each function in lib.rs returns a string. You concatenate each string in main.rs
 xsetroot -name $VAR
 ```
 which sets the status in DWM. 
+Error handling is done in the specific function to make the main.rs file cleaner. 
 
 ## How to use
 ```
