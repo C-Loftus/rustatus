@@ -2,7 +2,7 @@
 This program displays the computer's sound volume percent, network name, battery percentage, mouse battery percentage, charging status for both the laptop and mouse batter, and the date. This is then all displayed in the DWM status bar which is accessed through xsetroot.  
 
 ## External Dependencies
-xsetroot is the only dependency you may not have on a standard Linux install.
+* xsetroot is the only dependency you may not have on a standard Linux install.
 To install on Debian/Ubuntu/Distros with apt
 ```
 apt-get install x11-xserver-utils
@@ -15,7 +15,7 @@ Fedora
 ```
 dnf install xorg-xsetroot 
 ```
-Awk, amixer (current commands use pulseaudio) and iwgetid. However, all these commands are installed on nearly all Linux desktop installations by default. 
+* Awk, amixer (current commands use pulseaudio) iwgetid. However, all these commands are installed on nearly all Linux desktop installations by default. 
 
 ## API design
 Each function in lib.rs returns a string. You concatenate each string in main.rs in order to form the $VAR which is then passed to
