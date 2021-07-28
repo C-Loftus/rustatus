@@ -5,8 +5,15 @@ This program displays the computer's sound volume percent, network name, battery
 xsetroot is the only dependency you may not have on a standard Linux install.
 To install on Debian/Ubuntu/Distros with apt
 ```
-sudo apt-get install x11-xserver-utils
-sudo apt update; sudo apt upgrade
+apt-get install x11-xserver-utils
+```
+Arch/Manjaro
+```
+pacman -S xorg-xsetroot 
+```
+Fedora
+```
+dnf install xorg-xsetroot 
 ```
 Awk, amixer (current commands use pulseaudio) and iwgetid. However, all these commands are installed on nearly all Linux desktop installations by default. 
 
