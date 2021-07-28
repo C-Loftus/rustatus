@@ -2,7 +2,7 @@
 This program displays the computer's sound volume percent, network name, battery percentage, mouse battery percentage, charging status for both the laptop and mouse batter, and the date. This is then all displayed in the DWM status bar which is accessed through xsetroot.  
 
 ## External Dependencies
-xsetroot
+xsetroot is the only dependency you may not have on a standard Linux install.
 To install on Debian/Ubuntu/Distros with apt
 ```
 sudo apt-get install x11-xserver-utils
