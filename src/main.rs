@@ -2,9 +2,15 @@ mod lib;
 use lib::*;
 use std::process::Command;
 use std::thread;
+use std::fs::OpenOptions;
+use gag::Redirect;
+use std::io::prelude::*;
+
+
 
 fn main() {
-    // all your desired modules, in order
+    /***************************************/
+    // add/edit all your desired modules, in order
     let modules: Vec<&dyn Fn() -> String> = 
         vec![
             &awk_volume,
@@ -12,8 +18,19 @@ fn main() {
             &mouse_bat,
             &internal_bat,
             &time,
+        //  &example_func,
         ];
+    /***************************************/
 
+    // logging panics to home dir
+    let log = OpenOptions::new()
+    .truncate(true)
+    .read(true)
+    .create(true)
+    .write(true)
+    .open(dirs::home_dir().unwrap().join("rustatus"))
+    .unwrap();
+    let stderr_redirect = Redirect::stderr(log).unwrap();
 
     loop {
         // base string
@@ -23,13 +40,32 @@ fn main() {
             output += &func();
         }
 
-        print!("\n{}", output);
-
-        Command::new("xsetroot")
+        let xset_result = Command::new("xsetroot")
         .arg("-name")
         .arg(output.to_string())
-        .spawn()
-        .expect("xsetroot command failed to start");
-        thread::sleep(std::time::Duration::from_millis(1000));
+        .spawn();
+
+        // xsetroot can fail if the system is hibernating/sleeping
+        match xset_result {
+            Ok(_) => (),
+            Err(_) => {
+                // have to recreate variable here since
+                // stderr_redirect takes ownership and I need 
+                // another copy. Just remaking the variable is
+                // easiest and isn't a performance issue since 
+                // it occurs rarely
+                let log = OpenOptions::new()
+                .truncate(true)
+                .read(true)
+                .create(true)
+                .write(true)
+                .open(dirs::home_dir().unwrap().join("rustatus"))
+                .unwrap();
+                writeln!(&log, "xsetroot failed at {}", time())
+                .expect("writing to log failed");
+            }
+
+        }
+        thread::sleep(std::time::Duration::from_millis(100));
         }
     }

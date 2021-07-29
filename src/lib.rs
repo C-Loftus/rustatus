@@ -16,24 +16,33 @@ use ipgeolocate::{Locator, Service};
 /********************* */
 
 pub fn awk_volume() -> String {
+    let error = String::from(" V: E% | ");
+
+
     let status = Command::new("amixer")
     .arg("-D")
     .arg("pulse")
     .arg("get")
     .arg("Master")
     .stdout(Stdio::piped())
-    .spawn()
-    .unwrap();
+    .spawn();
+    let amixer_result = match status {
+        Ok(file) => match file.stdout {
+            Some(file2) => file2,
+            None => return error,
+        },
+        Err(_) => return error,
+    };
 
     let output = Command::new("awk")
     .arg("-F")
     .arg("[][]")
     .arg("{print $2}")
-    .stdin(status.stdout.unwrap())
+    .stdin(amixer_result)
     .output();
     let output = match output {
         Ok(file) => file,
-        Err(_) => return String::from(""),
+        Err(_) => return error,
     };
 
     let mut awk_output = String::from_utf8_lossy(&output.stdout)
@@ -48,13 +57,14 @@ pub fn awk_volume() -> String {
             return String::from(format!(" V: {}% | ", vec[0]))
         }
         else {
-            // linux updates one side faster when updating both, 
-            //unbalance is always corrected after a second passes
+            // linux updates one side faster when updating both
+            // so ubalanced might be printed but 
+            // is always corrected after a loop passes
             return String::from(" V: U% | ")
         }
     }
     else {
-        return String::from(" V: E% | ")
+        return error
     }
 }
 
