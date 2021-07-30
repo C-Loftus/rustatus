@@ -28,25 +28,27 @@ pub fn awk_volume() -> String {
     .spawn();
     let amixer_result = match status {
         Ok(file) => match file.stdout {
-            Some(file2) => file2,
-            None => return error,
+                Some(file2) => file2,
+                None => return error,
         },
         Err(_) => return error,
     };
 
-    let output = Command::new("awk")
+    let awk_cmd = Command::new("awk")
     .arg("-F")
     .arg("[][]")
     .arg("{print $2}")
     .stdin(amixer_result)
     .output();
-    let output = match output {
+    
+    let output = match awk_cmd {
         Ok(file) => file,
         Err(_) => return error,
     };
 
     let mut awk_output = String::from_utf8_lossy(&output.stdout)
                             .into_owned();
+
  
     awk_output.retain(|c| !c.is_whitespace() && (c != '\n'));
     let split = awk_output.split("%");
