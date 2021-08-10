@@ -2,8 +2,10 @@ use std::process::{Command, Stdio};
 use chrono::Local;
 use std::fs;
 use ipgeolocate::{Locator, Service};
+use maplit::hashmap;
 
-/********************* */
+use super::module;
+/**********************/
 // Options aren't returned by these functions. Instead error handling is
 // just done within the function itself, i.e. by returning a blank string
 // or a string that is formatted but just has no number
@@ -13,9 +15,9 @@ use ipgeolocate::{Locator, Service};
 // desirable,since it will cause the hostname to become much longer and thus 
 // make the status bar unpleasing to the eye.
 
-/********************* */
+/**********************/
 
-pub fn awk_volume() -> String {
+pub fn volume() -> String {
     let error = String::from(" V: E% | ");
 
 
@@ -70,7 +72,7 @@ pub fn awk_volume() -> String {
     }
 }
 
-pub fn wifi_name() -> String{
+pub fn network_name() -> String{
     let output = Command::new("iwgetid")
     .arg("-r")
     .output();
@@ -87,7 +89,7 @@ pub fn wifi_name() -> String{
 pub fn time() -> String {
     return Local::now().format("%I:%M %b-%d-%Y ").to_string();
 }
-pub fn mouse_bat() -> String {
+pub fn mouse_battery() -> String {
     let contents = fs::read_to_string("/sys/class/power_supply/hidpp_battery_0/capacity_level");
     let output = match contents {
         Ok(file) => file,
@@ -117,7 +119,7 @@ pub fn mouse_bat() -> String {
     };
     return String::from(format!("MB: {} | ", output))
 }
-pub fn internal_bat() -> String {
+pub fn internal_battery() -> String {
     let contents = fs::read_to_string("/sys/class/power_supply/BAT0/capacity");
     let output = match contents {
         Ok(file) => file,
@@ -139,7 +141,7 @@ pub fn internal_bat() -> String {
 }
 
 
-pub fn get_ip() -> String {
+pub fn ip() -> String {
     let output = Command::new("dig +short myip.opendns.com @resolver1.opendns.com")
     .output();
     let output = match output {
@@ -175,19 +177,19 @@ mod tests {
     }
     #[test]
     fn sound_test() {
-        print!("\n{}\n", awk_volume());
+        print!("\n{}\n", volume());
     }
     #[test]
     fn wifi_test() {
-        print!("\n{}\n", wifi_name());
+        print!("\n{}\n", network_name());
     }
     #[test]
     fn mb_test() {
-        print!("\n{}\n", mouse_bat());
+        print!("\n{}\n", mouse_battery());
     }
     #[test]
     fn location_test() {
-        let locale = location(&get_ip());
+        let locale = location(&ip());
         print!("\n{}\n", locale);
     }
 }
