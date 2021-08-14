@@ -1,5 +1,4 @@
-#[macro_use] extern crate maplit;
-pub mod module;
+pub mod plugins;
 pub mod functions;
 pub mod logging;
 
@@ -11,13 +10,17 @@ use std::thread;
 use gag::Redirect;
 use std::io::prelude::*;
 
+#[macro_use]
+extern crate lazy_static;
+#[macro_use] 
+extern crate maplit;
 
 
 
 fn main() {
     /***************************************/
-    // add/edit all your desired modules, in order
-    let modules: Vec<&dyn Fn() -> String> = 
+    // add/edit all your desired plugins, in order
+    let plugins: Vec<&dyn Fn() -> String> = 
         vec![
             &volume,
             &network_name, 
@@ -36,7 +39,7 @@ fn main() {
         // base string
         let mut output = String::from("");
         // concatenate all output strings
-        for func in &modules {
+        for func in &plugins {
             output += &func();
         }
         let xset_result = Command::new("xsetroot")

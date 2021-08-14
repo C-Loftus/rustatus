@@ -1,0 +1,9 @@
+{
+    "modules": [
+       {
+          "battery": "get_battery",
+          "time": "time",
+          "network": "network"
+       }
+    ]
+ }

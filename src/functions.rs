@@ -1,22 +1,14 @@
+//! Functions used in various rustatus plugins
+
 use std::process::{Command, Stdio};
 use chrono::Local;
 use std::fs;
 use ipgeolocate::{Locator, Service};
-use maplit::hashmap;
+use super::plugins;
 
-use super::module;
-/**********************/
-// Options aren't returned by these functions. Instead error handling is
-// just done within the function itself, i.e. by returning a blank string
-// or a string that is formatted but just has no number
-
-// It is easier to handle each case in the functions since each one is
-// different in its format. Updating the String to a long error is rarely 
-// desirable,since it will cause the hostname to become much longer and thus 
-// make the status bar unpleasing to the eye.
-
-/**********************/
-
+/// Returns a formatted string with the volume upon success.
+/// Returns a formatted string with the character "U" if the
+/// audio is unbalanced.
 pub fn volume() -> String {
     let error = String::from(" V: E% | ");
 
@@ -72,6 +64,8 @@ pub fn volume() -> String {
     }
 }
 
+/// Returns the name of the currently connected network
+/// inside a formatted string.
 pub fn network_name() -> String{
     let output = Command::new("iwgetid")
     .arg("-r")
@@ -140,11 +134,10 @@ pub fn internal_battery() -> String {
     return String::from(format!("B: {}%{} | ",output, indicator))
 }
 
-
+const DNS_RESOLVER: &str = "dig +short myip.opendns.com @resolver1.opendns.com";
 pub fn ip() -> String {
-    let output = Command::new("dig +short myip.opendns.com @resolver1.opendns.com")
-    .output();
-    let output = match output {
+    // free open source dns site. You can change it to your preferred one though
+    let output = match Command::new(DNS_RESOLVER).output() {
         Ok(file) => file,
         Err(_) => return String::from(""),
     };
@@ -187,9 +180,13 @@ mod tests {
     fn mb_test() {
         print!("\n{}\n", mouse_battery());
     }
+    // #[test]
+    // fn location_test() {
+    //     let locale = location(&ip());
+    //     print!("\n{}\n", locale);
+    // }
     #[test]
-    fn location_test() {
-        let locale = location(&ip());
-        print!("\n{}\n", locale);
+    fn ascii_test() {
+        assert_eq!('#'.is_ascii_alphanumeric(), true)
     }
 }
