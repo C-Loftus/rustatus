@@ -9,9 +9,10 @@ use std::error::Error;
 use std::fs::read_to_string;
 use std::collections::HashMap;
 
+extern crate yaml_rust;
+use yaml_rust::{YamlLoader, YamlEmitter, Yaml};
 
-
-const CONFIG_PATH: &str = "src/config.json";
+const CONFIG_PATH: &str = "src/config.yaml";
 
 lazy_static! {
     static ref MAP: HashMap<String, fn() -> String> = {
@@ -53,11 +54,10 @@ impl PluginList {
             items : Vec::new(),
         };
         let raw = &std::fs::read_to_string(CONFIG_PATH).unwrap();
-        let js = json::parse(raw).unwrap();
-        for plugin in js.members() {
-            let parsed_plugin = MAP[&plugin.to_string()];
+        let yml = YamlLoader::load_from_str(raw);
 
-            // returned_list.add_plugin()
+        for plugin in yml {
+            // let parsed_plugin = MAP[&Yaml::into_string(plugin).unwrap()];
         }
 
         
@@ -75,11 +75,13 @@ mod tests {
     use super::*;
     #[test]
     fn test_config() {
-        let raw = &std::fs::read_to_string("src/config.json").unwrap();
-        let js = json::parse(raw).unwrap();
-        assert!(js["modules"].is_array());
-        assert!(js["this"]["does"]["not"]["exist"].is_null());
-
+        let raw = &std::fs::read_to_string(CONFIG_PATH).unwrap();
+        let yml = YamlLoader::load_from_str(raw).unwrap();
+        let config = &yml[0];
+        let plugin_list = &config["modules"];
+        for plugin in plugin_list.as_vec().unwrap() {
+            print!("{}\n", plugin.as_str().unwrap());
+        }
     }
 
     #[test]
