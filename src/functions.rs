@@ -4,7 +4,6 @@ use std::process::{Command, Stdio};
 use chrono::Local;
 use std::fs;
 use ipgeolocate::{Locator, Service};
-use super::plugins;
 
 /// Returns a formatted string with the volume upon success.
 /// Returns a formatted string with the character "U" if the
@@ -43,8 +42,9 @@ pub fn volume() -> String {
     let mut awk_output = String::from_utf8_lossy(&output.stdout)
                             .into_owned();
 
- 
+    // only retain the important printable info
     awk_output.retain(|c| !c.is_whitespace() && (c != '\n'));
+
     let split = awk_output.split("%");
     let vec: Vec<&str> = split.collect();
 
@@ -54,8 +54,8 @@ pub fn volume() -> String {
         }
         else {
             // linux updates one side faster when updating both
-            // so ubalanced might be printed but 
-            // is always corrected after a loop passes
+            // so ubalanced might be printed but it should be
+            // corrected after a loop passes under normal circumstances
             return String::from(" V: U% | ")
         }
     }
@@ -157,8 +157,6 @@ pub async fn location(ip: &str) -> (String, String) {
 }
 
 // not so much tests as instead quick ways to display output
-// TODO turn into proper tests. 
-
 // to run
 // cargo test -- --nocapture
 #[cfg(test)]
