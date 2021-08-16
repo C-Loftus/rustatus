@@ -1,5 +1,5 @@
 # insert your modules in order
 modules:
-   - battery
-   - time
-   - network
+   - Battery
+   - Time
+   - Network

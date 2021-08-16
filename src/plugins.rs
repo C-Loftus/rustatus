@@ -1,72 +1,75 @@
 
 #![allow(dead_code)]
-
+// my crates
 use super::functions::*;
-use std::fs::File;
-use std::io::{BufRead, BufReader};
-use std::path::Path;
-use std::error::Error;
-use std::fs::read_to_string;
+// std crates
 use std::collections::HashMap;
-
+// external crates
 extern crate yaml_rust;
-use yaml_rust::{YamlLoader, YamlEmitter, Yaml};
+use yaml_rust::{YamlLoader};
 
 const CONFIG_PATH: &str = "src/config.yaml";
 
+// in order to get a const map you have to wrap it in a lazy static
+// rust doesn't have literal maps and using a macro would introduce an uncessary lifetime
 lazy_static! {
     static ref MAP: HashMap<String, fn() -> String> = {
-        let mut t: HashMap<String, fn() -> String> = HashMap::new();
-        t.insert(String::from("Volume"), volume);
-        t
+        let mut m: HashMap<String, fn() -> String> = HashMap::new();
+        m.insert(String::from("Volume"), volume);
+        m.insert(String::from("Network"), network_name);
+        m.insert(String::from("Time"), time);
+        m.insert(String::from("Mouse Battery"), mouse_battery);
+        m.insert(String::from("Battery"), internal_battery);
+        m
     };
 }
 
 
 pub struct PluginList {
-    items: Vec<&'static Plugin>,
+    items: Vec<Plugin>,
 } 
 
 pub struct Plugin {
-    pub get_data: &'static dyn Fn(),
-    pub rate: u8,
+    pub associated_fn: fn() -> String,
+    pub rate: Option<u8>,
 }
-
-// potentially switch to enum map?
-/// hashmap literal doesn't support &dyn Fn with 
-/// different fn so it needs to be wrapped
-enum FuncWrapper {
-    New(&'static dyn Fn() -> String), 
-}
-
 
 impl Plugin {
-    fn plugin_map() -> () {
+    fn get_rate() -> Option<u8> {
 
-        
+        None
     }
 }
 
 impl PluginList {
     fn new() -> Self {
 
-        let returned_list =  Self {
+        let mut returned_list =  Self {
             items : Vec::new(),
         };
+
+        // parse yaml data
         let raw = &std::fs::read_to_string(CONFIG_PATH).unwrap();
-        let yml = YamlLoader::load_from_str(raw);
+        let yml = YamlLoader::load_from_str(raw).unwrap();
+        let config = &yml[0];
+        let plugin_list = &config["modules"];
 
-        for plugin in yml {
-            // let parsed_plugin = MAP[&Yaml::into_string(plugin).unwrap()];
+        // iterate over yaml data and insert the corresponding functions into each plugin 
+        // struct. Then put that plugin into the list of all our plugins
+        for plugin in plugin_list.as_vec().unwrap() {
+            let fn_pointer = MAP[plugin.as_str().unwrap()]; 
+            let inserted_plugin = Plugin {
+                associated_fn: fn_pointer,
+                // temp code
+                rate : None
+            };
+            returned_list.add_plugin(inserted_plugin)
         }
-
-        
-            
         returned_list
     }
 
-    fn add_plugin (&mut self, m: &'static Plugin) -> () {
-        self.items.push(m);
+    fn add_plugin (&mut self, p: Plugin) -> () {
+        self.items.push(p);
         }
     }
 
@@ -74,7 +77,7 @@ impl PluginList {
 mod tests {
     use super::*;
     #[test]
-    fn test_config() {
+    fn test_config_parse() {
         let raw = &std::fs::read_to_string(CONFIG_PATH).unwrap();
         let yml = YamlLoader::load_from_str(raw).unwrap();
         let config = &yml[0];
@@ -82,6 +85,16 @@ mod tests {
         for plugin in plugin_list.as_vec().unwrap() {
             print!("{}\n", plugin.as_str().unwrap());
         }
+    }
+    #[test]
+    fn test_plugin_list() {
+        // should match the output for the functions
+        // you placed in config.yaml
+        let list = PluginList::new();
+        for plugin in list.items {
+            print!("{:?}\n", (plugin.associated_fn)())
+        }
+
     }
 
     #[test]
