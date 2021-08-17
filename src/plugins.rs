@@ -32,10 +32,19 @@ pub struct PluginList {
     pub items: Vec<Plugin>,
 } 
 
+#[derive(Hash)]
 pub struct Plugin {
     pub associated_fn: fn() -> String,
     pub rate: Option<Duration>,
 }
+
+impl PartialEq for Plugin {
+    fn eq(&self, other: &Self) -> bool {
+        self.associated_fn == other.associated_fn
+    }
+}
+impl Eq for Plugin {}
+
 
 fn get_rate(fn_to_match: &str, yml: &Yaml) -> Option<Duration> {
     let rate_list = &(yml["Refresh_Rates"]);

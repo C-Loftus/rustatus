@@ -1,15 +1,18 @@
 pub mod plugins;
 pub mod functions;
 pub mod logging;
+pub mod output;
 // my modules
 use functions::*;
 use logging::*;
-use plugins::PluginList;
+use output::generate_map;
+use plugins::{Plugin, PluginList};
 
 use std::process::Command;
 use std::thread;
 use gag::Redirect;
 use std::io::prelude::*;
+use std::collections::HashMap;
 
 #[macro_use]
 extern crate lazy_static;
@@ -20,11 +23,10 @@ fn main() {
     // read config and create a list of associated functions
     let plugin_list = PluginList::new(CONFIG_PATH);
 
+    let output_map: HashMap<&Plugin, String> = generate_map(&plugin_list);
     // panics are logged to home dir
     let log = setup_logger();
-    { 
-        Redirect::stderr(log).unwrap();
-    }
+    let _ = Redirect::stderr(log).unwrap(); 
 
     loop {
         // base string
