@@ -24,9 +24,12 @@ lazy_static! {
     };
 }
 
-/* config file terms */
+/* const terms used when parsing config file */
 const MODULES: &'static str = "Modules";
 const REFRESH_RATES: &'static str = "Refresh_Rates";
+// yaml parser can read multiple files so we this specifies
+// 0 for the only index in the yaml file array
+const ONLY_YAML_INDEX: usize = 0;
 
 pub struct PluginList {
     pub items: Vec<Plugin>,
@@ -38,21 +41,21 @@ pub struct Plugin {
 }
 
 fn get_rate(fn_to_match: &str, yml: &Yaml) -> Option<Duration> {
-    let rate_list = &(yml["Refresh_Rates"]);
-        for rate in rate_list.as_hash().unwrap() {
-            if let Some(valid_string) = rate.0.as_str() {
-                if valid_string == fn_to_match {
-                    // yaml crate only supports parsing into i64
-                    // so we need to do manual cast for duration
-                    // this panics on invalid parse
-                    let rate = rate.1.as_i64().unwrap() as u64;
-                    let duration = Duration::from_millis(rate);
-                    return Some(duration)
-                }
+    let rate_list = &(yml[REFRESH_RATES]);
+    for rate in rate_list.as_hash().unwrap() {
+        if let Some(valid_string) = rate.0.as_str() {
+            if valid_string == fn_to_match {
+                // yaml crate only supports parsing into i64
+                // so we need to do manual cast for duration
+                // this panics on invalid parse
+                let rate = rate.1.as_i64().unwrap() as u64;
+                let duration = Duration::from_millis(rate);
+                return Some(duration)
             }
         }
-        // return nothing if no duration specified
-        None
+    }
+    // return nothing if no duration specified
+    None
 }
 
 
@@ -66,7 +69,7 @@ impl PluginList {
         // parse yaml data
         let raw = std::fs::read_to_string(config_filename).unwrap();
         let yml = YamlLoader::load_from_str(&raw).unwrap();
-        let config = &yml[0];
+        let config = &yml[ONLY_YAML_INDEX];
         let plugin_list = &config[MODULES];
 
         // iterate over yaml data and insert the corresponding functions into each plugin 
@@ -76,7 +79,7 @@ impl PluginList {
             let fn_pointer = MAP[plugin_name]; 
             let rate = get_rate(plugin_name, config);
 
-            returned_list.add_plugin(fn_pointer, rate /* temp none */)
+            returned_list.add_plugin(fn_pointer, rate)
         }
         returned_list
     }
