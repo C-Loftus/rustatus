@@ -1,21 +1,14 @@
+//! Functions used in various rustatus plugins
+
 use std::process::{Command, Stdio};
 use chrono::Local;
 use std::fs;
 use ipgeolocate::{Locator, Service};
 
-/********************* */
-// Options aren't returned by these functions. Instead error handling is
-// just done within the function itself, i.e. by returning a blank string
-// or a string that is formatted but just has no number
-
-// It is easier to handle each case in the functions since each one is
-// different in its format. Updating the String to a long error is rarely 
-// desirable,since it will cause the hostname to become much longer and thus 
-// make the status bar unpleasing to the eye.
-
-/********************* */
-
-pub fn awk_volume() -> String {
+/// Returns a formatted string with the volume upon success.
+/// Returns a formatted string with the character "U" if the
+/// audio is unbalanced.
+pub fn volume() -> String {
     let error = String::from(" V: E% | ");
 
 
@@ -49,8 +42,9 @@ pub fn awk_volume() -> String {
     let mut awk_output = String::from_utf8_lossy(&output.stdout)
                             .into_owned();
 
- 
+    // only retain the important printable info
     awk_output.retain(|c| !c.is_whitespace() && (c != '\n'));
+
     let split = awk_output.split("%");
     let vec: Vec<&str> = split.collect();
 
@@ -60,8 +54,8 @@ pub fn awk_volume() -> String {
         }
         else {
             // linux updates one side faster when updating both
-            // so ubalanced might be printed but 
-            // is always corrected after a loop passes
+            // so ubalanced might be printed but it should be
+            // corrected after a loop passes under normal circumstances
             return String::from(" V: U% | ")
         }
     }
@@ -70,7 +64,9 @@ pub fn awk_volume() -> String {
     }
 }
 
-pub fn wifi_name() -> String{
+/// Returns the name of the currently connected network
+/// inside a formatted string.
+pub fn network_name() -> String{
     let output = Command::new("iwgetid")
     .arg("-r")
     .output();
@@ -87,7 +83,7 @@ pub fn wifi_name() -> String{
 pub fn time() -> String {
     return Local::now().format("%I:%M %b-%d-%Y ").to_string();
 }
-pub fn mouse_bat() -> String {
+pub fn mouse_battery() -> String {
     let contents = fs::read_to_string("/sys/class/power_supply/hidpp_battery_0/capacity_level");
     let output = match contents {
         Ok(file) => file,
@@ -117,7 +113,7 @@ pub fn mouse_bat() -> String {
     };
     return String::from(format!("MB: {} | ", output))
 }
-pub fn internal_bat() -> String {
+pub fn internal_battery() -> String {
     let contents = fs::read_to_string("/sys/class/power_supply/BAT0/capacity");
     let output = match contents {
         Ok(file) => file,
@@ -138,11 +134,10 @@ pub fn internal_bat() -> String {
     return String::from(format!("B: {}%{} | ",output, indicator))
 }
 
-
-pub fn get_ip() -> String {
-    let output = Command::new("dig +short myip.opendns.com @resolver1.opendns.com")
-    .output();
-    let output = match output {
+const DNS_RESOLVER: &str = "dig +short myip.opendns.com @resolver1.opendns.com";
+pub fn ip() -> String {
+    // free open source dns site. You can change it to your preferred one though
+    let output = match Command::new(DNS_RESOLVER).output() {
         Ok(file) => file,
         Err(_) => return String::from(""),
     };
@@ -162,8 +157,6 @@ pub async fn location(ip: &str) -> (String, String) {
 }
 
 // not so much tests as instead quick ways to display output
-// TODO turn into proper tests. 
-
 // to run
 // cargo test -- --nocapture
 #[cfg(test)]
@@ -175,19 +168,23 @@ mod tests {
     }
     #[test]
     fn sound_test() {
-        print!("\n{}\n", awk_volume());
+        print!("\n{}\n", volume());
     }
     #[test]
     fn wifi_test() {
-        print!("\n{}\n", wifi_name());
+        print!("\n{}\n", network_name());
     }
     #[test]
     fn mb_test() {
-        print!("\n{}\n", mouse_bat());
+        print!("\n{}\n", mouse_battery());
     }
+    // #[test]
+    // fn location_test() {
+    //     let locale = location(&ip());
+    //     print!("\n{}\n", locale);
+    // }
     #[test]
-    fn location_test() {
-        let locale = location(&get_ip());
-        print!("\n{}\n", locale);
+    fn ascii_test() {
+        assert_eq!('#'.is_ascii_alphanumeric(), true)
     }
 }
