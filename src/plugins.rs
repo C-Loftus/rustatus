@@ -31,6 +31,7 @@ const REFRESH_RATES: &'static str = "Refresh_Rates";
 // 0 for the only index in the yaml file array
 const ONLY_YAML_INDEX: usize = 0;
 
+
 pub struct PluginList {
     pub items: Vec<Plugin>,
 } 

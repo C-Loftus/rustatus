@@ -20,33 +20,33 @@ const CONFIG_PATH: &str = "src/config.yaml";
 fn main() {
     // read config and create a list of associated functions
     let plugin_list = PluginList::new(CONFIG_PATH);
-    let mut output_map: HashMap<&String, String> = output::generate_map(&plugin_list);
+
+    let mut output_map: HashMap<String, String> = output::generate_map(&plugin_list);
     // panics are logged to home dir
     let log = setup_logger();
     Redirect::stderr(log).unwrap(); 
 
 
-    let data = Arc::new(Mutex::new(0));
+    let data = Arc::new(Mutex::new(output_map.to_owned()));
     
     loop {
         // base string
-        let mut output = String::from("");
         // concatenate all output strings
         // for plg in &plugin_list.items {
         //     output += &(plg.associated_fn)();
         // }
         for plg in &plugin_list.items {
             let data = Arc::clone(&data);
-            let fn_output = thread::spawn( move || {
-                    let string = data.lock().unwrap();
-                    // *string = "st";
+            let data_handle = thread::spawn( move || {
+                    let mut string = data.lock().unwrap();
+                    // let o = string.entry(&plg.name).or_insert((plg.associated_fn)());
+                    // *o = (plg.associated_fn)();
                 }
             );
 
-            let o = output_map.entry(&plg.name).or_insert((plg.associated_fn)());
-            *o = (plg.associated_fn)();
+
         }
         
-        output::xsetroot(&output);
+        // output::xsetroot(&output);
     }
 }
