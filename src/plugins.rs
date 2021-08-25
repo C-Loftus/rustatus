@@ -36,7 +36,7 @@ pub struct PluginList {
     pub items: Vec<Plugin>,
 } 
 
-#[derive(Hash, Debug)]
+#[derive(Hash, Debug, Clone)]
 pub struct Plugin {
     pub associated_fn: fn() -> String,
     pub rate: Option<Duration>,
@@ -56,6 +56,7 @@ impl Eq for Plugin {}
 
 fn get_rate(fn_to_match: &str, yml: &Yaml) -> Option<Duration> {
     let rate_list = &(yml[REFRESH_RATES]);
+    // TODO as
     for rate in rate_list.as_hash().unwrap() {
         if let Some(valid_string) = rate.0.as_str() {
             if valid_string == fn_to_match {
