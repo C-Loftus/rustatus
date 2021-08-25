@@ -5,7 +5,7 @@ Modules:
    - Network
 
 # in milliseconds
-Refresh_rates:
+Refresh_Rates:
    Battery: 10000
 
 Battery_Path : "/sys/class/power_supply/hidpp_battery_0/capacity_level"

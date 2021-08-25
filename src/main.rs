@@ -1,47 +1,73 @@
 pub mod plugins;
 pub mod functions;
 pub mod logging;
-// my modules
-use functions::*;
-use logging::*;
-use plugins::PluginList;
+pub mod output;
 
-use std::process::Command;
-use std::thread;
+use {logging::*, plugins::{Plugin, PluginList}};
+
+use std::{thread, collections::HashMap};
+use std::sync::{Arc, Mutex};
+
 use gag::Redirect;
-use std::io::prelude::*;
-
 #[macro_use]
 extern crate lazy_static;
 
 const CONFIG_PATH: &str = "src/config.yaml";
 
+
+
 fn main() {
     // read config and create a list of associated functions
     let plugin_list = PluginList::new(CONFIG_PATH);
 
+    let output_map: HashMap<String, String> = output::generate_map(&plugin_list);
     // panics are logged to home dir
     let log = setup_logger();
-    { 
-        Redirect::stderr(log).unwrap();
-    }
+    Redirect::stderr(log).unwrap(); 
+
+
+    let data = Arc::new(Mutex::new(output_map.to_owned()));
+
+    // get static str from item
+    
+    // let length = plugin_list.items.len();
+    let plugin_array: Box<[Plugin]> = plugin_list.items.into_boxed_slice();
+
+
+    // lazy_static! {
+    //     /// This is an example for using doc comment attributes
+    //     static ref len: usize =  PluginList::new(CONFIG_PATH).items.len();
+    // }
+    
+    // const length: usize = *len;
+
+    // let plug: Result<[Plugin; length], _> = plugin_list.items.try_into();
+    // let gg = plug.unwrap();
 
     loop {
-        // base string
-        let mut output = String::from("");
-        // concatenate all output strings
-        for plg in &plugin_list.items {
-            output += &(plg.associated_fn)();
+
+        for plg in plugin_array.to_vec() {
+            
+            let data = Arc::clone(&data);
+
+            let _data_handle = thread::spawn( move || {
+                    let mut map = data.lock().unwrap();
+                    let map_val = map.entry(plg.name.to_owned()).or_insert((plg.associated_fn)());
+                    *map_val = (plg.associated_fn)();
+                    if let Some(_) = plg.rate {
+                        thread::sleep(plg.rate.unwrap());
+                    }
+                }
+            );
+
+
         }
-        let xset_result = Command::new("xsetroot")
-                          .arg("-name")
-                          .arg(output.to_string())
-                          .spawn();
-        // xsetroot can fail if the system is hibernating/sleeping
-        if let Err(_) = xset_result {
-                writeln!(&setup_logger(), "xsetroot failed at {}", time())
-                .expect("writing to log failed");
-        };
-        thread::sleep(std::time::Duration::from_millis(1000));
+        let data = Arc::clone(&data);
+        let borrowed_map = &*(data.lock().unwrap());
+        let mut output_string = String::from("");
+        for (_, value) in borrowed_map.into_iter() {
+            output_string += &value;
+        }
+        output::xsetroot(&output_string);
     }
 }

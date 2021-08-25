@@ -11,7 +11,7 @@ use yaml_rust::{YamlLoader, Yaml};
 
 
 // in order to get a const map you have to wrap it in a lazy static
-// rust doesn't have literal maps and using a macro would introduce an uncessary lifetime
+// rust doesn't have map literals
 lazy_static! {
     static ref MAP: HashMap<String, fn() -> String> = {
         let mut m: HashMap<String, fn() -> String> = HashMap::new();
@@ -31,21 +31,36 @@ const REFRESH_RATES: &'static str = "Refresh_Rates";
 // 0 for the only index in the yaml file array
 const ONLY_YAML_INDEX: usize = 0;
 
+
 pub struct PluginList {
     pub items: Vec<Plugin>,
 } 
 
+#[derive(Hash, Debug, Clone)]
 pub struct Plugin {
     pub associated_fn: fn() -> String,
     pub rate: Option<Duration>,
+    pub name: String,
 }
+
+
+
+/// Needed for hash table insertion
+impl PartialEq for Plugin {
+    fn eq(&self, other: &Self) -> bool {
+        self.associated_fn == other.associated_fn
+    }
+}
+impl Eq for Plugin {}
+
 
 fn get_rate(fn_to_match: &str, yml: &Yaml) -> Option<Duration> {
     let rate_list = &(yml[REFRESH_RATES]);
+    // TODO as
     for rate in rate_list.as_hash().unwrap() {
         if let Some(valid_string) = rate.0.as_str() {
             if valid_string == fn_to_match {
-                // yaml crate only supports parsing into i64
+                // yaml crate only supports parsing as i64
                 // so we need to do manual cast for duration
                 // this panics on invalid parse
                 let rate = rate.1.as_i64().unwrap() as u64;
@@ -79,15 +94,16 @@ impl PluginList {
             let fn_pointer = MAP[plugin_name]; 
             let rate = get_rate(plugin_name, config);
 
-            returned_list.add_plugin(fn_pointer, rate)
+            returned_list.add_plugin(fn_pointer, rate, plugin_name.to_string());
         }
         returned_list
     }
 
-    fn add_plugin (&mut self, associated_fn: fn() -> String, rate : Option<Duration>) -> () {
+    fn add_plugin (&mut self, associated_fn: fn() -> String, rate : Option<Duration>, name: String) -> () {
         let inserted_plugin = Plugin {
             associated_fn,
-            rate
+            rate,
+            name,
         };
         self.items.push(inserted_plugin);
     }
@@ -135,5 +151,14 @@ mod tests {
     fn test_map_name_to_fn() {
         let volume_pointer = (MAP[&String::from("Volume")])();
         assert_eq!(volume_pointer, volume())
+    }
+    #[test]
+    fn test_plugin_print() {
+        let p = Plugin {
+            associated_fn: volume,
+            rate: None,
+            name: String::from("test"),
+        };
+        print!("{:?}{:#?}", p, p.associated_fn);
     }
 }
