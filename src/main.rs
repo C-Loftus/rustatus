@@ -54,6 +54,8 @@ fn main() {
                     let mut map = data.lock().unwrap();
                     let map_val = map.entry(plg.name.to_owned()).or_insert((plg.associated_fn)());
                     *map_val = (plg.associated_fn)();
+                    // drops the map so it unlocks for other threads
+                    drop(map);
                     if let Some(_) = plg.rate {
                         thread::sleep(plg.rate.unwrap());
                     }
