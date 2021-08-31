@@ -28,21 +28,8 @@ fn main() {
 
     let data = Arc::new(Mutex::new(output_map.to_owned()));
 
-    // get static str from item
-    
-    // let length = plugin_list.items.len();
+    // boxed slice can be passed into the thread multiple times    
     let plugin_array: Box<[Plugin]> = plugin_list.items.into_boxed_slice();
-
-
-    // lazy_static! {
-    //     /// This is an example for using doc comment attributes
-    //     static ref len: usize =  PluginList::new(CONFIG_PATH).items.len();
-    // }
-    
-    // const length: usize = *len;
-
-    // let plug: Result<[Plugin; length], _> = plugin_list.items.try_into();
-    // let gg = plug.unwrap();
 
     loop {
 
@@ -51,19 +38,23 @@ fn main() {
             let data = Arc::clone(&data);
 
             let _data_handle = thread::spawn( move || {
+                    // get the map that stores all the output
                     let mut map = data.lock().unwrap();
+                    // update the map value within the respective plugin
                     let map_val = map.entry(plg.name.to_owned()).or_insert((plg.associated_fn)());
                     *map_val = (plg.associated_fn)();
                     // drops the map so it unlocks for other threads
                     drop(map);
-                    if let Some(_) = plg.rate {
-                        thread::sleep(plg.rate.unwrap());
+                    if let Some(duration) = plg.rate {
+                        thread::sleep(duration);
                     }
                 }
             );
 
 
         }
+        // after loop finishes and gets all plugin values, xsetroot 
+        // with the map values
         let data = Arc::clone(&data);
         let borrowed_map = &*(data.lock().unwrap());
         let mut output_string = String::from("");
