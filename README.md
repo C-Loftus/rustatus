@@ -1,5 +1,5 @@
 # rustatus
-rustatus is a mulithreaded modular status monitor for the Linux tiling window manager, DWM. By default, this program can display the computer's volume percentage, network name, battery percentage, mouse battery percentage, charging status for both the laptop and mouse batter, and the date. This can be customized to include or remove certain plugins or change the refresh rate of each.
+rustatus is a multithreaded modular status monitor for the Linux tiling window manager, DWM. By default, this program can display the computer's volume percentage, network name, battery percentage, mouse battery percentage, charging status for both the laptop and mouse batter, and the date. This can be customized to include or remove certain plugins or change the refresh rate of each.
 
 ## External Dependencies
 * xsetroot is the only dependency you may not have on a standard Linux install.
